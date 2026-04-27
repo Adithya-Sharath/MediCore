@@ -22,13 +22,13 @@ try {
         throw new Exception($conn->error);
     }
 
-    $data = [];
+    $doctors = [];
     while ($row = $result->fetch_assoc()) {
-        $data[] = $row;
+        $doctors[] = $row;
     }
 
     $conn->close();
-    echo json_encode($data);
+    echo json_encode(['success' => true, 'doctors' => $doctors]);
 
 } catch (Exception $e) {
     http_response_code(500);

@@ -29,13 +29,13 @@ try {
         throw new Exception($conn->error);
     }
 
-    $data = [];
+    $bills = [];
     while ($row = $result->fetch_assoc()) {
-        $data[] = $row;
+        $bills[] = $row;
     }
 
     $conn->close();
-    echo json_encode($data);
+    echo json_encode(['success' => true, 'bills' => $bills]);
 
 } catch (Exception $e) {
     http_response_code(500);
