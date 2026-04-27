@@ -1,0 +1,902 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hospital Management System</title>
+    <style>
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f0f4f8;
+            color: #2d3748;
+            min-height: 100vh;
+        }
+
+        /* ── Header ───────────────────────────────────────── */
+        .header {
+            background: linear-gradient(135deg, #0f2d52 0%, #1a56a8 100%);
+            color: white;
+            padding: 0 2rem;
+            height: 64px;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.25);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .header-logo { font-size: 2rem; }
+        .header-text h1 { font-size: 1.25rem; font-weight: 700; letter-spacing: 0.02em; }
+        .header-text p  { font-size: 0.72rem; opacity: 0.75; margin-top: 1px; }
+        .header-spacer  { flex: 1; }
+        .header-time    { font-size: 0.8rem; opacity: 0.8; }
+
+        /* ── Layout ───────────────────────────────────────── */
+        .layout {
+            display: flex;
+            height: calc(100vh - 64px);
+        }
+
+        /* ── Sidebar ──────────────────────────────────────── */
+        .sidebar {
+            width: 220px;
+            background: #0f2d52;
+            flex-shrink: 0;
+            padding: 1.5rem 0;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+        .nav-section-label {
+            font-size: 0.65rem;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: rgba(255,255,255,0.35);
+            padding: 0.8rem 1.5rem 0.3rem;
+        }
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem 1.5rem;
+            color: rgba(255,255,255,0.65);
+            cursor: pointer;
+            transition: all 0.15s;
+            border-left: 3px solid transparent;
+            font-size: 0.875rem;
+            user-select: none;
+        }
+        .nav-item:hover {
+            background: rgba(255,255,255,0.07);
+            color: white;
+        }
+        .nav-item.active {
+            background: rgba(255,255,255,0.12);
+            color: white;
+            border-left-color: #60a5fa;
+            font-weight: 600;
+        }
+        .nav-icon { font-size: 1.05rem; width: 22px; text-align: center; }
+
+        /* ── Content ──────────────────────────────────────── */
+        .content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 2rem;
+        }
+
+        /* ── Sections ─────────────────────────────────────── */
+        .section       { display: none; }
+        .section.active { display: block; }
+
+        /* ── Section header ───────────────────────────────── */
+        .section-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.5rem;
+        }
+        .section-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #0f2d52;
+        }
+        .section-sub {
+            font-size: 0.8rem;
+            color: #6b7280;
+            margin-top: 2px;
+        }
+
+        /* ── Stats grid ───────────────────────────────────── */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        .stat-card {
+            background: white;
+            border-radius: 14px;
+            padding: 1.25rem 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            box-shadow: 0 1px 6px rgba(0,0,0,0.07);
+            cursor: pointer;
+            transition: transform 0.15s, box-shadow 0.15s;
+        }
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+        }
+        .stat-icon {
+            width: 52px;
+            height: 52px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            flex-shrink: 0;
+        }
+        .icon-blue   { background: #dbeafe; }
+        .icon-green  { background: #d1fae5; }
+        .icon-purple { background: #ede9fe; }
+        .icon-orange { background: #ffedd5; }
+        .stat-value  { font-size: 2rem; font-weight: 800; color: #0f2d52; line-height: 1; }
+        .stat-label  { font-size: 0.78rem; color: #6b7280; margin-top: 3px; }
+
+        /* ── Table card ───────────────────────────────────── */
+        .table-card {
+            background: white;
+            border-radius: 14px;
+            box-shadow: 0 1px 6px rgba(0,0,0,0.07);
+            overflow: hidden;
+        }
+        table { width: 100%; border-collapse: collapse; }
+        thead { background: #f8fafc; }
+        th {
+            padding: 0.85rem 1.25rem;
+            text-align: left;
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            border-bottom: 1px solid #e5e7eb;
+            white-space: nowrap;
+        }
+        td {
+            padding: 0.9rem 1.25rem;
+            font-size: 0.875rem;
+            border-bottom: 1px solid #f3f4f6;
+            vertical-align: middle;
+        }
+        tr:last-child td { border-bottom: none; }
+        tbody tr:hover td { background: #f8fafc; }
+
+        /* ── Name cell with avatar ────────────────────────── */
+        .name-cell { display: flex; align-items: center; gap: 0.65rem; }
+        .avatar {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.78rem;
+            color: white;
+            flex-shrink: 0;
+        }
+
+        /* ── Badges ───────────────────────────────────────── */
+        .badge {
+            display: inline-block;
+            padding: 0.2rem 0.7rem;
+            border-radius: 20px;
+            font-size: 0.72rem;
+            font-weight: 700;
+            letter-spacing: 0.02em;
+        }
+        .badge-scheduled  { background: #dbeafe; color: #1d4ed8; }
+        .badge-completed  { background: #d1fae5; color: #065f46; }
+        .badge-cancelled  { background: #fee2e2; color: #991b1b; }
+
+        /* ── Buttons ──────────────────────────────────────── */
+        .btn {
+            padding: 0.55rem 1.2rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.875rem;
+            font-weight: 600;
+            transition: all 0.15s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+        .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+        .btn-primary   { background: #1a56a8; color: white; }
+        .btn-primary:hover:not(:disabled) { background: #1443a0; }
+        .btn-secondary { background: #e5e7eb; color: #374151; }
+        .btn-secondary:hover { background: #d1d5db; }
+        .btn-icon {
+            background: #f3f4f6;
+            border: none;
+            border-radius: 8px;
+            width: 34px;
+            height: 34px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            transition: background 0.15s;
+            color: #6b7280;
+        }
+        .btn-icon:hover { background: #e5e7eb; color: #374151; }
+
+        /* ── Loading ──────────────────────────────────────── */
+        .loading {
+            text-align: center;
+            padding: 3.5rem 2rem;
+            color: #9ca3af;
+        }
+        .spinner {
+            width: 36px;
+            height: 36px;
+            border: 3px solid #e5e7eb;
+            border-top-color: #1a56a8;
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+            margin: 0 auto 1rem;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* ── Empty state ──────────────────────────────────── */
+        .empty {
+            text-align: center;
+            padding: 3.5rem 2rem;
+            color: #9ca3af;
+        }
+        .empty-icon { font-size: 3rem; margin-bottom: 0.5rem; }
+        .empty p    { font-size: 0.875rem; }
+
+        /* ── Modal ────────────────────────────────────────── */
+        .overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.45);
+            z-index: 500;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(2px);
+        }
+        .overlay.open { display: flex; }
+        .modal {
+            background: white;
+            border-radius: 18px;
+            padding: 2rem;
+            width: 480px;
+            max-width: 92vw;
+            box-shadow: 0 24px 64px rgba(0,0,0,0.28);
+            animation: slideUp 0.2s ease;
+        }
+        @keyframes slideUp {
+            from { transform: translateY(20px); opacity: 0; }
+            to   { transform: translateY(0);    opacity: 1; }
+        }
+        .modal-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+        .modal-title { font-size: 1.15rem; font-weight: 700; color: #0f2d52; }
+        .modal-close {
+            background: #f3f4f6;
+            border: none;
+            border-radius: 6px;
+            width: 30px;
+            height: 30px;
+            cursor: pointer;
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #6b7280;
+            transition: background 0.15s;
+        }
+        .modal-close:hover { background: #e5e7eb; }
+
+        /* ── Form ─────────────────────────────────────────── */
+        .form-group   { margin-bottom: 1.1rem; }
+        .form-label {
+            display: block;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: #374151;
+            margin-bottom: 0.35rem;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+        .form-control {
+            width: 100%;
+            padding: 0.6rem 0.9rem;
+            border: 1.5px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 0.875rem;
+            font-family: inherit;
+            color: #1f2937;
+            transition: border-color 0.15s, box-shadow 0.15s;
+            background: white;
+            outline: none;
+        }
+        .form-control:focus {
+            border-color: #1a56a8;
+            box-shadow: 0 0 0 3px rgba(26,86,168,0.12);
+        }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+        .form-actions {
+            display: flex;
+            gap: 0.75rem;
+            justify-content: flex-end;
+            margin-top: 1.5rem;
+        }
+
+        /* ── Toast ────────────────────────────────────────── */
+        .toast {
+            position: fixed;
+            bottom: 1.5rem;
+            right: 1.5rem;
+            padding: 0.85rem 1.4rem;
+            border-radius: 10px;
+            color: white;
+            font-size: 0.875rem;
+            font-weight: 600;
+            z-index: 1000;
+            transform: translateY(80px);
+            opacity: 0;
+            transition: transform 0.3s, opacity 0.3s;
+            max-width: 360px;
+            line-height: 1.4;
+        }
+        .toast.visible       { transform: translateY(0); opacity: 1; }
+        .toast.toast-success { background: #059669; }
+        .toast.toast-error   { background: #dc2626; }
+
+        /* ── Dashboard quick table ────────────────────────── */
+        .quick-table-title {
+            font-size: 1rem;
+            font-weight: 700;
+            color: #0f2d52;
+            margin-bottom: 0.75rem;
+        }
+
+        /* ── Amount cell ──────────────────────────────────── */
+        .amount { font-weight: 700; color: #065f46; }
+    </style>
+</head>
+<body>
+
+<!-- ── Header ──────────────────────────────────────────── -->
+<header class="header">
+    <div class="header-logo">🏥</div>
+    <div class="header-text">
+        <h1>Hospital Management System</h1>
+        <p>PHP + MySQL · XAMPP · hospital_db</p>
+    </div>
+    <div class="header-spacer"></div>
+    <div class="header-time" id="header-clock"></div>
+</header>
+
+<div class="layout">
+
+    <!-- ── Sidebar ─────────────────────────────────────── -->
+    <nav class="sidebar">
+        <div class="nav-section-label">Overview</div>
+        <div class="nav-item active" data-section="dashboard" onclick="navigate(this)">
+            <span class="nav-icon">📊</span> Dashboard
+        </div>
+
+        <div class="nav-section-label" style="margin-top:0.5rem;">Records</div>
+        <div class="nav-item" data-section="patients" onclick="navigate(this)">
+            <span class="nav-icon">🧑‍⚕️</span> Patients
+        </div>
+        <div class="nav-item" data-section="doctors" onclick="navigate(this)">
+            <span class="nav-icon">👨‍⚕️</span> Doctors
+        </div>
+
+        <div class="nav-section-label" style="margin-top:0.5rem;">Operations</div>
+        <div class="nav-item" data-section="appointments" onclick="navigate(this)">
+            <span class="nav-icon">📅</span> Appointments
+        </div>
+        <div class="nav-item" data-section="bills" onclick="navigate(this)">
+            <span class="nav-icon">💰</span> Bills
+        </div>
+    </nav>
+
+    <!-- ── Main content ─────────────────────────────────── -->
+    <main class="content">
+
+        <!-- Dashboard ──────────────────────────────────── -->
+        <section class="section active" id="section-dashboard">
+            <div class="section-head">
+                <div>
+                    <div class="section-title">Dashboard</div>
+                    <div class="section-sub">Overview of hospital data</div>
+                </div>
+                <button class="btn-icon" onclick="initAll()" title="Refresh all">↻</button>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-card" onclick="navigate(document.querySelector('[data-section=patients]'))">
+                    <div class="stat-icon icon-blue">🧑‍⚕️</div>
+                    <div>
+                        <div class="stat-value" id="stat-patients">—</div>
+                        <div class="stat-label">Total Patients</div>
+                    </div>
+                </div>
+                <div class="stat-card" onclick="navigate(document.querySelector('[data-section=doctors]'))">
+                    <div class="stat-icon icon-green">👨‍⚕️</div>
+                    <div>
+                        <div class="stat-value" id="stat-doctors">—</div>
+                        <div class="stat-label">Total Doctors</div>
+                    </div>
+                </div>
+                <div class="stat-card" onclick="navigate(document.querySelector('[data-section=appointments]'))">
+                    <div class="stat-icon icon-purple">📅</div>
+                    <div>
+                        <div class="stat-value" id="stat-appointments">—</div>
+                        <div class="stat-label">Appointments</div>
+                    </div>
+                </div>
+                <div class="stat-card" onclick="navigate(document.querySelector('[data-section=bills]'))">
+                    <div class="stat-icon icon-orange">💰</div>
+                    <div>
+                        <div class="stat-value" id="stat-bills">—</div>
+                        <div class="stat-label">Total Bills</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="quick-table-title">Recent Appointments</div>
+            <div class="table-card" id="dash-appointments">
+                <div class="loading"><div class="spinner"></div>Loading...</div>
+            </div>
+        </section>
+
+        <!-- Patients ────────────────────────────────────── -->
+        <section class="section" id="section-patients">
+            <div class="section-head">
+                <div>
+                    <div class="section-title">Patients</div>
+                    <div class="section-sub">All registered patients</div>
+                </div>
+                <button class="btn-icon" onclick="loadPatients()" title="Refresh">↻</button>
+            </div>
+            <div class="table-card" id="tbl-patients">
+                <div class="loading"><div class="spinner"></div>Loading...</div>
+            </div>
+        </section>
+
+        <!-- Doctors ─────────────────────────────────────── -->
+        <section class="section" id="section-doctors">
+            <div class="section-head">
+                <div>
+                    <div class="section-title">Doctors</div>
+                    <div class="section-sub">Medical staff and departments</div>
+                </div>
+                <button class="btn-icon" onclick="loadDoctors()" title="Refresh">↻</button>
+            </div>
+            <div class="table-card" id="tbl-doctors">
+                <div class="loading"><div class="spinner"></div>Loading...</div>
+            </div>
+        </section>
+
+        <!-- Appointments ────────────────────────────────── -->
+        <section class="section" id="section-appointments">
+            <div class="section-head">
+                <div>
+                    <div class="section-title">Appointments</div>
+                    <div class="section-sub">Bills are auto-generated on booking</div>
+                </div>
+                <button class="btn btn-primary" onclick="openModal()">＋ Book Appointment</button>
+            </div>
+            <div class="table-card" id="tbl-appointments">
+                <div class="loading"><div class="spinner"></div>Loading...</div>
+            </div>
+        </section>
+
+        <!-- Bills ───────────────────────────────────────── -->
+        <section class="section" id="section-bills">
+            <div class="section-head">
+                <div>
+                    <div class="section-title">Bills</div>
+                    <div class="section-sub">Auto-generated via DB trigger (₹500 per appointment)</div>
+                </div>
+                <button class="btn-icon" onclick="loadBills()" title="Refresh">↻</button>
+            </div>
+            <div class="table-card" id="tbl-bills">
+                <div class="loading"><div class="spinner"></div>Loading...</div>
+            </div>
+        </section>
+
+    </main>
+</div>
+
+<!-- ── Book Appointment Modal ───────────────────────────── -->
+<div class="overlay" id="booking-overlay" onclick="overlayClick(event)">
+    <div class="modal">
+        <div class="modal-head">
+            <div class="modal-title">📅 Book Appointment</div>
+            <button class="modal-close" onclick="closeModal()">✕</button>
+        </div>
+        <form id="booking-form" onsubmit="submitBooking(event)">
+            <div class="form-group">
+                <label class="form-label">Patient</label>
+                <select class="form-control" id="sel-patient" required>
+                    <option value="">Select patient…</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Doctor</label>
+                <select class="form-control" id="sel-doctor" required>
+                    <option value="">Select doctor…</option>
+                </select>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Date</label>
+                    <input type="date" class="form-control" id="inp-date" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Time</label>
+                    <input type="time" class="form-control" id="inp-time" required>
+                </div>
+            </div>
+            <div class="form-actions">
+                <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+                <button type="submit" class="btn btn-primary" id="btn-submit">📅 Book Appointment</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ── Toast ─────────────────────────────────────────────── -->
+<div class="toast" id="toast"></div>
+
+<script>
+/* ── State ───────────────────────────────────────────────── */
+let state = { patients: [], doctors: [], appointments: [], bills: [] };
+
+/* ── Clock ───────────────────────────────────────────────── */
+function tickClock() {
+    document.getElementById('header-clock').textContent =
+        new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+}
+tickClock();
+setInterval(tickClock, 1000);
+
+/* ── Toast ───────────────────────────────────────────────── */
+let toastTimer;
+function toast(msg, type = 'success') {
+    const el = document.getElementById('toast');
+    el.textContent = msg;
+    el.className = `toast toast-${type} visible`;
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => { el.className = 'toast'; }, 3800);
+}
+
+/* ── Navigation ──────────────────────────────────────────── */
+function navigate(el) {
+    const id = el.dataset.section;
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    document.getElementById('section-' + id).classList.add('active');
+    el.classList.add('active');
+
+    const loaders = {
+        patients:     loadPatients,
+        doctors:      loadDoctors,
+        appointments: loadAppointments,
+        bills:        loadBills,
+    };
+    if (loaders[id]) loaders[id]();
+}
+
+/* ── Fetch helper ────────────────────────────────────────── */
+async function api(url) {
+    const r = await fetch(url, { cache: 'no-store' });
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    const data = await r.json();
+    if (data && data.error) throw new Error(data.error);
+    return data;
+}
+
+/* ── Helpers ─────────────────────────────────────────────── */
+const COLORS = ['#1a56a8','#059669','#7c3aed','#b45309','#0891b2','#be185d','#dc2626'];
+const esc = s => s == null ? '—' : String(s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+const avatarColor = name => COLORS[name.charCodeAt(0) % COLORS.length];
+const initials    = name => name.split(' ').map(w => w[0]).join('').slice(0,2).toUpperCase();
+
+function fmtDate(d) {
+    if (!d) return '—';
+    const dt = new Date(d + 'T00:00:00');
+    return dt.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+}
+function fmtTime(t) {
+    if (!t) return '—';
+    const [h, m] = t.split(':');
+    const hr = parseInt(h, 10);
+    return `${hr % 12 || 12}:${m} ${hr < 12 ? 'AM' : 'PM'}`;
+}
+
+function nameCell(name) {
+    return `<div class="name-cell">
+        <div class="avatar" style="background:${avatarColor(name)}">${esc(initials(name))}</div>
+        <span>${esc(name)}</span>
+    </div>`;
+}
+
+function statusBadge(status) {
+    const cls = status === 'Scheduled' ? 'badge-scheduled'
+              : status === 'Completed' ? 'badge-completed'
+              : 'badge-cancelled';
+    return `<span class="badge ${cls}">${esc(status)}</span>`;
+}
+
+function setLoading(id) {
+    document.getElementById(id).innerHTML =
+        '<div class="loading"><div class="spinner"></div>Loading…</div>';
+}
+
+function setEmpty(id, icon, msg) {
+    document.getElementById(id).innerHTML =
+        `<div class="empty"><div class="empty-icon">${icon}</div><p>${msg}</p></div>`;
+}
+
+/* ── Patients ────────────────────────────────────────────── */
+async function loadPatients() {
+    setLoading('tbl-patients');
+    try {
+        state.patients = await api('get_patients.php');
+        document.getElementById('stat-patients').textContent = state.patients.length;
+
+        if (!state.patients.length) {
+            setEmpty('tbl-patients', '🧑‍⚕️', 'No patients found');
+            return;
+        }
+
+        const rows = state.patients.map(p => `<tr>
+            <td style="color:#9ca3af;font-size:0.8rem">${p.patient_id}</td>
+            <td>${nameCell(p.name)}</td>
+            <td>${esc(p.age)}</td>
+            <td>${esc(p.gender)}</td>
+            <td><code style="background:#f3f4f6;padding:2px 6px;border-radius:4px;font-size:0.8rem">${esc(p.phone)}</code></td>
+            <td style="color:#6b7280;font-size:0.82rem">${esc(p.address)}</td>
+        </tr>`).join('');
+
+        document.getElementById('tbl-patients').innerHTML = `
+        <table>
+            <thead><tr>
+                <th>#</th><th>Name</th><th>Age</th><th>Gender</th><th>Phone</th><th>Address</th>
+            </tr></thead>
+            <tbody>${rows}</tbody>
+        </table>`;
+    } catch(e) {
+        setEmpty('tbl-patients', '⚠️', 'Failed to load: ' + e.message);
+    }
+}
+
+/* ── Doctors ─────────────────────────────────────────────── */
+async function loadDoctors() {
+    setLoading('tbl-doctors');
+    try {
+        state.doctors = await api('get_doctors.php');
+        document.getElementById('stat-doctors').textContent = state.doctors.length;
+
+        if (!state.doctors.length) {
+            setEmpty('tbl-doctors', '👨‍⚕️', 'No doctors found');
+            return;
+        }
+
+        const deptColors = { Cardiology:'#dbeafe', Dermatology:'#d1fae5', Orthopedic:'#ede9fe' };
+        const rows = state.doctors.map(d => {
+            const dc = deptColors[d.department_name] || '#f3f4f6';
+            return `<tr>
+                <td style="color:#9ca3af;font-size:0.8rem">${d.doctor_id}</td>
+                <td>${nameCell(d.name)}</td>
+                <td>${esc(d.specialization)}</td>
+                <td><span style="background:${dc};padding:2px 10px;border-radius:20px;font-size:0.78rem;font-weight:600">${esc(d.department_name)}</span></td>
+                <td><code style="background:#f3f4f6;padding:2px 6px;border-radius:4px;font-size:0.8rem">${esc(d.phone)}</code></td>
+            </tr>`;
+        }).join('');
+
+        document.getElementById('tbl-doctors').innerHTML = `
+        <table>
+            <thead><tr>
+                <th>#</th><th>Name</th><th>Specialization</th><th>Department</th><th>Phone</th>
+            </tr></thead>
+            <tbody>${rows}</tbody>
+        </table>`;
+    } catch(e) {
+        setEmpty('tbl-doctors', '⚠️', 'Failed to load: ' + e.message);
+    }
+}
+
+/* ── Appointments ────────────────────────────────────────── */
+async function loadAppointments() {
+    setLoading('tbl-appointments');
+    try {
+        state.appointments = await api('get_appointments.php');
+        document.getElementById('stat-appointments').textContent = state.appointments.length;
+        renderAppointments('tbl-appointments', state.appointments);
+    } catch(e) {
+        setEmpty('tbl-appointments', '⚠️', 'Failed to load: ' + e.message);
+    }
+}
+
+function renderAppointments(containerId, data, limit) {
+    const rows_data = limit ? data.slice(0, limit) : data;
+    if (!rows_data.length) {
+        setEmpty(containerId, '📅', 'No appointments yet');
+        return;
+    }
+    const rows = rows_data.map(a => `<tr>
+        <td style="color:#9ca3af;font-size:0.8rem">${a.appointment_id}</td>
+        <td>${nameCell(a.patient_name)}</td>
+        <td>${nameCell(a.doctor_name)}</td>
+        <td style="font-size:0.82rem">${fmtDate(a.appointment_date)}</td>
+        <td style="font-size:0.82rem">${fmtTime(a.appointment_time)}</td>
+        <td>${statusBadge(a.status)}</td>
+    </tr>`).join('');
+
+    document.getElementById(containerId).innerHTML = `
+    <table>
+        <thead><tr>
+            <th>#</th><th>Patient</th><th>Doctor</th><th>Date</th><th>Time</th><th>Status</th>
+        </tr></thead>
+        <tbody>${rows}</tbody>
+    </table>`;
+}
+
+/* ── Bills ───────────────────────────────────────────────── */
+async function loadBills() {
+    setLoading('tbl-bills');
+    try {
+        state.bills = await api('get_bills.php');
+        document.getElementById('stat-bills').textContent = state.bills.length;
+
+        if (!state.bills.length) {
+            setEmpty('tbl-bills', '💰', 'No bills yet');
+            return;
+        }
+
+        const rows = state.bills.map(b => `<tr>
+            <td style="color:#9ca3af;font-size:0.8rem">${b.bill_id}</td>
+            <td>${nameCell(b.patient_name)}</td>
+            <td>${nameCell(b.doctor_name)}</td>
+            <td style="font-size:0.82rem">${fmtDate(b.appointment_date)}</td>
+            <td style="font-size:0.82rem">${fmtTime(b.appointment_time)}</td>
+            <td><span class="amount">₹${parseFloat(b.total_amount).toFixed(2)}</span></td>
+        </tr>`).join('');
+
+        document.getElementById('tbl-bills').innerHTML = `
+        <table>
+            <thead><tr>
+                <th>#</th><th>Patient</th><th>Doctor</th><th>Appt. Date</th><th>Appt. Time</th><th>Amount</th>
+            </tr></thead>
+            <tbody>${rows}</tbody>
+        </table>`;
+    } catch(e) {
+        setEmpty('tbl-bills', '⚠️', 'Failed to load: ' + e.message);
+    }
+}
+
+/* ── Booking Modal ───────────────────────────────────────── */
+async function openModal() {
+    document.getElementById('booking-form').reset();
+
+    // Ensure data loaded
+    if (!state.patients.length) {
+        state.patients = await api('get_patients.php').catch(() => []);
+    }
+    if (!state.doctors.length) {
+        state.doctors = await api('get_doctors.php').catch(() => []);
+    }
+
+    const ps = document.getElementById('sel-patient');
+    ps.innerHTML = '<option value="">Select patient…</option>'
+        + state.patients.map(p =>
+            `<option value="${p.patient_id}">${esc(p.name)} (ID ${p.patient_id})</option>`
+        ).join('');
+
+    const ds = document.getElementById('sel-doctor');
+    ds.innerHTML = '<option value="">Select doctor…</option>'
+        + state.doctors.map(d =>
+            `<option value="${d.doctor_id}">${esc(d.name)} — ${esc(d.department_name)}</option>`
+        ).join('');
+
+    document.getElementById('inp-date').min = new Date().toISOString().split('T')[0];
+    document.getElementById('booking-overlay').classList.add('open');
+}
+
+function closeModal() {
+    document.getElementById('booking-overlay').classList.remove('open');
+}
+
+function overlayClick(e) {
+    if (e.target === document.getElementById('booking-overlay')) closeModal();
+}
+
+async function submitBooking(e) {
+    e.preventDefault();
+    const btn = document.getElementById('btn-submit');
+    btn.textContent = '⏳ Booking…';
+    btn.disabled = true;
+
+    const body = new URLSearchParams({
+        patient_id: document.getElementById('sel-patient').value,
+        doctor_id:  document.getElementById('sel-doctor').value,
+        date:       document.getElementById('inp-date').value,
+        time:       document.getElementById('inp-time').value,
+    });
+
+    try {
+        const res = await fetch('book_appointment.php', { method: 'POST', body });
+        const data = await res.json();
+
+        if (data.success) {
+            closeModal();
+            toast('✅ Appointment booked! Bill auto-generated by trigger.', 'success');
+            // Reload both and update stats
+            state.appointments = await api('get_appointments.php').catch(() => state.appointments);
+            state.bills        = await api('get_bills.php').catch(() => state.bills);
+            document.getElementById('stat-appointments').textContent = state.appointments.length;
+            document.getElementById('stat-bills').textContent        = state.bills.length;
+            // Refresh current visible table
+            renderAppointments('tbl-appointments', state.appointments);
+            renderAppointments('dash-appointments', state.appointments, 5);
+        } else {
+            toast('❌ ' + (data.error || 'Booking failed'), 'error');
+        }
+    } catch(err) {
+        toast('❌ Network error: ' + err.message, 'error');
+    } finally {
+        btn.textContent = '📅 Book Appointment';
+        btn.disabled = false;
+    }
+}
+
+/* ── Init ────────────────────────────────────────────────── */
+async function initAll() {
+    try {
+        [state.patients, state.doctors, state.appointments, state.bills] = await Promise.all([
+            api('get_patients.php'),
+            api('get_doctors.php'),
+            api('get_appointments.php'),
+            api('get_bills.php'),
+        ]);
+        document.getElementById('stat-patients').textContent     = state.patients.length;
+        document.getElementById('stat-doctors').textContent      = state.doctors.length;
+        document.getElementById('stat-appointments').textContent = state.appointments.length;
+        document.getElementById('stat-bills').textContent        = state.bills.length;
+        renderAppointments('dash-appointments', state.appointments, 5);
+    } catch(e) {
+        setEmpty('dash-appointments', '⚠️',
+            'Could not reach PHP backend. Make sure XAMPP is running and files are in htdocs.');
+    }
+}
+
+initAll();
+</script>
+</body>
+</html>
