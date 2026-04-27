@@ -2,13 +2,17 @@
 ini_set('display_errors', 0);
 error_reporting(0);
 
-$host = getenv('MYSQL_HOST');
-$user = getenv('MYSQL_USER');
-$pass = getenv('MYSQL_PASSWORD');
+$host = getenv('MYSQLHOST');
+$user = getenv('MYSQLUSER');
+$pass = getenv('MYSQLPASSWORD');
 $db   = getenv('MYSQL_DATABASE');
-$port = getenv('MYSQL_PORT') ?: 3306;
+$port = getenv('MYSQLPORT') ?: 3306;
 
-$conn = new mysqli($host, $user, $pass, $db, (int)$port);
-if ($conn->connect_error) {
-    throw new Exception('DB connection failed: ' . $conn->connect_error);
+$conn = mysqli_connect($host, $user, $pass, $db, (int)$port);
+
+if (!$conn) {
+    http_response_code(500);
+    header('Content-Type: application/json');
+    echo json_encode(['error' => 'DB connection failed: ' . mysqli_connect_error()]);
+    exit;
 }
