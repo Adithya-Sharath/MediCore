@@ -3,7 +3,7 @@
 A full-stack Hospital Management System built as a DBMS course project at BITS Pilani Dubai Campus.
 
 ## Live Demo
-https://hospitalmanagement-production-5612.up.railway.app
+https://hospitalmanagement-production-41fc.up.railway.app
 
 ## Tech Stack
 - **Frontend:** HTML, CSS, JavaScript (React via Babel, single-page app)
