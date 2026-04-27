@@ -55,5 +55,6 @@ Environment variables required:
 - Ashima Elizabeth Reji
 - Sharukesh Surendranth Easwar
 
-**Course:** HSS F232 — Introduction to Development Studies  
+**Course:** CS F212 — Database Systems (3 1 4)  
+**Instructor:** Prof. Shivang Agarwal  
 **Institution:** BITS Pilani Dubai Campus
