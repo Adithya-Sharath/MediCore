@@ -1,5 +1,5 @@
 Options -Indexes
-DirectoryIndex "Hospital Management.html"
+DirectoryIndex index.html "Hospital Management.html"
 
 <IfModule mod_rewrite.c>
     RewriteEngine On
@@ -11,7 +11,7 @@ DirectoryIndex "Hospital Management.html"
     RewriteRule ^ - [L]
 
     # Route everything else to the main HTML file
-    RewriteRule ^ "Hospital Management.html" [L]
+    RewriteRule ^ index.html [L]
 </IfModule>
 
 <IfModule mod_headers.c>
