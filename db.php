@@ -5,7 +5,9 @@ $pass = getenv('MYSQLPASSWORD');     // exists but hidden
 $db   = getenv('MYSQL_DATABASE');    // railway
 $port = getenv('MYSQLPORT') ?: 3306; // 3306
 
-$conn = mysqli_connect($host, $user, $pass, $db, (int)$port);
+$conn = mysqli_init();
+mysqli_ssl_set($conn, NULL, NULL, NULL, NULL, NULL);
+mysqli_real_connect($conn, $host, $user, $pass, $db, (int)$port, NULL, MYSQLI_CLIENT_SSL);
 
 if (!$conn) {
     http_response_code(500);
